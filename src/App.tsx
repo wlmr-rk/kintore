@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Home, Utensils, Activity, BarChart3, Target, Lock, Egg, Wheat, Edit3 } from "lucide-react";
+import { Home, Utensils, Activity, BarChart3, Lock, Egg, Wheat, Edit3 } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -58,10 +58,10 @@ const CalorieTracker = () => {
     localStorage.setItem("workouts", JSON.stringify(workouts));
   }, [workouts]);
 
-  // Hardcoded user data
-  const age = 29;
-  const height = 167; // cm
-  const sex = "male";
+  // Hardcoded user data (unused but kept for future features)
+  // const age = 29;
+  // const height = 167; // cm
+  // const sex = "male";
 
   // Body composition categories with estimated body fat percentages
   const bodyCompositionProfiles = {
@@ -87,9 +87,9 @@ const CalorieTracker = () => {
     return Math.round(bmr * profile.activityMultiplier);
   };
 
-  const totalMealCalories = meals.reduce((sum, meal) => sum + meal.calories, 0);
-  const totalMealProtein = meals.reduce((sum, meal) => sum + meal.protein, 0);
-  const totalWorkoutCalories = workouts.reduce((sum, workout) => sum + workout.calories, 0);
+  const totalMealCalories = meals.reduce((sum: number, meal: any) => sum + meal.calories, 0);
+  const totalMealProtein = meals.reduce((sum: number, meal: any) => sum + meal.protein, 0);
+  const totalWorkoutCalories = workouts.reduce((sum: number, workout: any) => sum + workout.calories, 0);
   const netCalories = totalMealCalories - totalWorkoutCalories;
 
   const bmr = calculateBMR();
@@ -187,28 +187,21 @@ const CalorieTracker = () => {
     }
   };
 
-  const deleteMeal = (id) => {
-    setMeals(meals.filter((m) => m.id !== id));
+  const deleteMeal = (id: number) => {
+    setMeals(meals.filter((m: any) => m.id !== id));
   };
 
-  const deleteWorkout = (id) => {
-    setWorkouts(workouts.filter((w) => w.id !== id));
+  const deleteWorkout = (id: number) => {
+    setWorkouts(workouts.filter((w: any) => w.id !== id));
   };
 
-  const clearAllData = () => {
-    if (confirm("Clear all meals and workouts?")) {
-      setMeals([]);
-      setWorkouts([]);
-    }
-  };
-
-  const handleWeightDragStart = (e) => {
+  const handleWeightDragStart = (e: any) => {
     setIsDraggingWeight(true);
     setDragStartY(e.type.includes("touch") ? e.touches[0].clientY : e.clientY);
     setDragStartWeight(weight);
   };
 
-  const handleWeightDragMove = (e) => {
+  const handleWeightDragMove = (e: any) => {
     if (!isDraggingWeight) return;
     e.preventDefault();
     const currentY = e.type.includes("touch") ? e.touches[0].clientY : e.clientY;
@@ -239,7 +232,7 @@ const CalorieTracker = () => {
     const proteinPerKg = totalMealProtein / weight;
 
     // Protein targets based on body composition and deficit
-    const profile = bodyCompositionProfiles[activityLevel as keyof typeof bodyCompositionProfiles];
+    // const profile = bodyCompositionProfiles[activityLevel as keyof typeof bodyCompositionProfiles];
     const isInDeficit = dailyDeficit < 0;
     const minProtein = isInDeficit ? 1.6 : 1.2; // Higher in deficit to preserve muscle
     const optimalProtein = isInDeficit ? 2.0 : 1.6;
@@ -641,7 +634,7 @@ const CalorieTracker = () => {
                 {meals.length === 0 ? (
                   <p className="text-center text-gray-600 py-6 text-sm">No meals added</p>
                 ) : (
-                  meals.map((meal) => (
+                  meals.map((meal: any) => (
                     <div
                       key={meal.id}
                       className="glass rounded-2xl p-3 flex justify-between items-center item-enter"
@@ -732,7 +725,7 @@ const CalorieTracker = () => {
                 {workouts.length === 0 ? (
                   <p className="text-center text-gray-600 py-6 text-sm">No runs logged</p>
                 ) : (
-                  workouts.map((workout) => (
+                  workouts.map((workout: any) => (
                     <div
                       key={workout.id}
                       className="glass rounded-2xl p-3 flex justify-between items-center item-enter"
