@@ -1,1 +1,27 @@
 @import "tailwindcss";
+
+/* Force dark mode */
+:root {
+  color-scheme: dark only;
+  -webkit-color-scheme: dark;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+/* Ensure all form elements respect dark mode */
+input, textarea, select {
+  color-scheme: dark;
+}
+
+/* Prevent white flash on load */
+html, body, #root {
+  background-color: #000000;
+  color: #ffffff;
+}
