@@ -85,10 +85,10 @@ const CalorieTracker = () => {
 
   // Body composition categories with estimated body fat percentages
   const bodyCompositionProfiles = {
-    fat: { bodyFatPercent: 0.30, activityMultiplier: 1.2 }, // 30% BF, sedentary
-    regular: { bodyFatPercent: 0.22, activityMultiplier: 1.375 }, // 22% BF, light activity
-    fit: { bodyFatPercent: 0.15, activityMultiplier: 1.55 }, // 15% BF, moderate activity
-    slim: { bodyFatPercent: 0.10, activityMultiplier: 1.725 }, // 10% BF, very active
+    fat: { bodyFatPercent: 0.30, activityMultiplier: 1.2 }, // Lower baseline NEAT
+    regular: { bodyFatPercent: 0.22, activityMultiplier: 1.25 }, // Average baseline NEAT
+    fit: { bodyFatPercent: 0.15, activityMultiplier: 1.3 }, // Higher baseline NEAT (more muscle)
+    slim: { bodyFatPercent: 0.10, activityMultiplier: 1.35 }, // Highest baseline NEAT
   };
 
   // Katch-McArdle equation (body composition-based)
