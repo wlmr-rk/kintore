@@ -36,6 +36,10 @@ const CalorieTracker = () => {
     const saved = localStorage.getItem("workouts");
     return saved ? JSON.parse(saved) : [];
   });
+  const [workoutType, setWorkoutType] = useState("running");
+  const [pullUpReps, setPullUpReps] = useState(0);
+  const [pushUpReps, setPushUpReps] = useState(0);
+  const [legRaiseReps, setLegRaiseReps] = useState(0);
   const [isDraggingWeight, setIsDraggingWeight] = useState(false);
   const [dragStartY, setDragStartY] = useState(0);
   const [dragStartWeight, setDragStartWeight] = useState(0);
@@ -190,20 +194,38 @@ const CalorieTracker = () => {
   };
 
   const addWorkout = () => {
-    if (duration > 0) {
+    let workout: any = { id: Date.now(), type: workoutType };
+
+    if (workoutType === "running" && duration > 0) {
       const pace = duration / distance;
       // Scientifically validated formula: Calories ≈ weight_kg × distance_km × 1.036
       const calories = Math.round(weight * distance * 1.036);
-      setWorkouts([
-        ...workouts,
-        {
-          id: Date.now(),
-          distance,
-          duration,
-          pace: pace.toFixed(1),
-          calories,
-        },
-      ]);
+      workout = {
+        ...workout,
+        distance,
+        duration,
+        pace: pace.toFixed(1),
+        calories,
+      };
+      setWorkouts([...workouts, workout]);
+    } else if (workoutType === "pullups" && pullUpReps > 0) {
+      // Rough estimate: ~0.7 cal per rep (bodyweight dependent)
+      const calories = Math.round(pullUpReps * weight * 0.01);
+      workout = { ...workout, reps: pullUpReps, calories };
+      setWorkouts([...workouts, workout]);
+      setPullUpReps(0);
+    } else if (workoutType === "pushups" && pushUpReps > 0) {
+      // Rough estimate: ~0.5 cal per rep
+      const calories = Math.round(pushUpReps * weight * 0.007);
+      workout = { ...workout, reps: pushUpReps, calories };
+      setWorkouts([...workouts, workout]);
+      setPushUpReps(0);
+    } else if (workoutType === "legraises" && legRaiseReps > 0) {
+      // Rough estimate: ~0.6 cal per rep
+      const calories = Math.round(legRaiseReps * weight * 0.008);
+      workout = { ...workout, reps: legRaiseReps, calories };
+      setWorkouts([...workouts, workout]);
+      setLegRaiseReps(0);
     }
   };
 
@@ -697,53 +719,186 @@ const CalorieTracker = () => {
         {activeTab === "running" && (
           <div className="space-y-2 view-transition">
             <div className="glass-elevated rounded-2xl p-3">
-              <label className="text-[10px] text-gray-500 mb-1 block">Distance (km)</label>
-              <div className="flex gap-1.5 mb-4">
-                {[2.5, 5, 10, 15, 17.5].map((d) => (
+              {/* Workout Type Tabs */}
+              <div className="flex gap-1 mb-3">
+                {[
+                  { value: "running", label: "Running" },
+                  { value: "pullups", label: "Pull Ups" },
+                  { value: "pushups", label: "Push Ups" },
+                  { value: "legraises", label: "Leg Raises" },
+                ].map((type) => (
                   <button
-                    key={d}
-                    onClick={() => setDistance(d)}
-                    className={`flex-1 py-2 rounded-xl text-xs font-medium
-                                    ${distance === d ? "bg-white/20 text-white border border-white/30" : "glass text-gray-400"}`}
+                    key={type.value}
+                    onClick={() => setWorkoutType(type.value)}
+                    className={`flex-1 py-2 rounded-lg text-[10px] font-medium transition-all
+                                    ${workoutType === type.value ? "bg-white/20 text-white border border-white/30" : "glass text-gray-400"}`}
                   >
-                    {d}
+                    {type.label}
                   </button>
                 ))}
               </div>
 
-              <label className="text-xs text-gray-500 mb-2 block">Duration (minutes)</label>
-              <div className="flex items-center gap-1.5 mb-4">
-                <button
-                  onClick={() => setDuration(Math.max(1, duration - 1))}
-                  className="glass rounded-xl w-9 h-9 flex items-center justify-center text-sm"
-                >
-                  −
-                </button>
-                <input
-                  type="number"
-                  value={duration}
-                  onChange={(e) => setDuration(parseInt(e.target.value) || 0)}
-                  onKeyDown={(e) => e.key === 'Enter' && addWorkout()}
-                  className="glass rounded-xl flex-1 h-9 text-center bg-transparent border-0 text-base font-semibold"
-                />
-                <button
-                  onClick={() => setDuration(duration + 1)}
-                  className="glass rounded-xl w-9 h-9 flex items-center justify-center text-sm"
-                >
-                  +
-                </button>
-              </div>
+              {/* Running Tab Content */}
+              {workoutType === "running" && (
+                <div>
+                  <label className="text-[10px] text-gray-500 mb-1 block">Distance (km)</label>
+                  <div className="flex gap-1.5 mb-4">
+                    {[2.5, 5, 10, 15, 17.5].map((d) => (
+                      <button
+                        key={d}
+                        onClick={() => setDistance(d)}
+                        className={`flex-1 py-2 rounded-xl text-xs font-medium
+                                        ${distance === d ? "bg-white/20 text-white border border-white/30" : "glass text-gray-400"}`}
+                      >
+                        {d}
+                      </button>
+                    ))}
+                  </div>
 
-              <button
-                onClick={addWorkout}
-                className="w-full glass-elevated rounded-xl py-2.5 text-sm font-semibold mb-4"
-              >
-                + Add Run
-              </button>
+                  <label className="text-xs text-gray-500 mb-2 block">Duration (minutes)</label>
+                  <div className="flex items-center gap-1.5 mb-4">
+                    <button
+                      onClick={() => setDuration(Math.max(1, duration - 1))}
+                      className="glass rounded-xl w-9 h-9 flex items-center justify-center text-sm"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      value={duration}
+                      onChange={(e) => setDuration(parseInt(e.target.value) || 0)}
+                      onKeyDown={(e) => e.key === 'Enter' && addWorkout()}
+                      className="glass rounded-xl flex-1 h-9 text-center bg-transparent border-0 text-base font-semibold"
+                    />
+                    <button
+                      onClick={() => setDuration(duration + 1)}
+                      className="glass rounded-xl w-9 h-9 flex items-center justify-center text-sm"
+                    >
+                      +
+                    </button>
+                  </div>
 
+                  <button
+                    onClick={addWorkout}
+                    className="w-full glass-elevated rounded-xl py-2.5 text-sm font-semibold mb-4"
+                  >
+                    + Add Run
+                  </button>
+                </div>
+              )}
+
+              {/* Pull Ups Tab Content */}
+              {workoutType === "pullups" && (
+                <div>
+                  <label className="text-xs text-gray-500 mb-2 block">Reps</label>
+                  <div className="flex items-center gap-1.5 mb-4">
+                    <button
+                      onClick={() => setPullUpReps(Math.max(0, pullUpReps - 1))}
+                      className="glass rounded-xl w-9 h-9 flex items-center justify-center text-sm"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      value={pullUpReps}
+                      onChange={(e) => setPullUpReps(parseInt(e.target.value) || 0)}
+                      onKeyDown={(e) => e.key === 'Enter' && addWorkout()}
+                      className="glass rounded-xl flex-1 h-9 text-center bg-transparent border-0 text-base font-semibold"
+                      placeholder="Reps"
+                    />
+                    <button
+                      onClick={() => setPullUpReps(pullUpReps + 1)}
+                      className="glass rounded-xl w-9 h-9 flex items-center justify-center text-sm"
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={addWorkout}
+                    className="w-full glass-elevated rounded-xl py-2.5 text-sm font-semibold mb-4"
+                  >
+                    + Add Set
+                  </button>
+                </div>
+              )}
+
+              {/* Push Ups Tab Content */}
+              {workoutType === "pushups" && (
+                <div>
+                  <label className="text-xs text-gray-500 mb-2 block">Reps</label>
+                  <div className="flex items-center gap-1.5 mb-4">
+                    <button
+                      onClick={() => setPushUpReps(Math.max(0, pushUpReps - 1))}
+                      className="glass rounded-xl w-9 h-9 flex items-center justify-center text-sm"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      value={pushUpReps}
+                      onChange={(e) => setPushUpReps(parseInt(e.target.value) || 0)}
+                      onKeyDown={(e) => e.key === 'Enter' && addWorkout()}
+                      className="glass rounded-xl flex-1 h-9 text-center bg-transparent border-0 text-base font-semibold"
+                      placeholder="Reps"
+                    />
+                    <button
+                      onClick={() => setPushUpReps(pushUpReps + 1)}
+                      className="glass rounded-xl w-9 h-9 flex items-center justify-center text-sm"
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={addWorkout}
+                    className="w-full glass-elevated rounded-xl py-2.5 text-sm font-semibold mb-4"
+                  >
+                    + Add Set
+                  </button>
+                </div>
+              )}
+
+              {/* Leg Raises Tab Content */}
+              {workoutType === "legraises" && (
+                <div>
+                  <label className="text-xs text-gray-500 mb-2 block">Reps</label>
+                  <div className="flex items-center gap-1.5 mb-4">
+                    <button
+                      onClick={() => setLegRaiseReps(Math.max(0, legRaiseReps - 1))}
+                      className="glass rounded-xl w-9 h-9 flex items-center justify-center text-sm"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      value={legRaiseReps}
+                      onChange={(e) => setLegRaiseReps(parseInt(e.target.value) || 0)}
+                      onKeyDown={(e) => e.key === 'Enter' && addWorkout()}
+                      className="glass rounded-xl flex-1 h-9 text-center bg-transparent border-0 text-base font-semibold"
+                      placeholder="Reps"
+                    />
+                    <button
+                      onClick={() => setLegRaiseReps(legRaiseReps + 1)}
+                      className="glass rounded-xl w-9 h-9 flex items-center justify-center text-sm"
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={addWorkout}
+                    className="w-full glass-elevated rounded-xl py-2.5 text-sm font-semibold mb-4"
+                  >
+                    + Add Set
+                  </button>
+                </div>
+              )}
+
+              {/* Workout History */}
               <div className="space-y-2">
                 {workouts.length === 0 ? (
-                  <p className="text-center text-gray-600 py-6 text-sm">No runs logged</p>
+                  <p className="text-center text-gray-600 py-6 text-sm">No workouts logged</p>
                 ) : (
                   workouts.map((workout: any) => (
                     <div
@@ -751,12 +906,46 @@ const CalorieTracker = () => {
                       className="glass rounded-2xl p-3 flex justify-between items-center item-enter"
                     >
                       <div>
-                        <div className="font-medium text-sm">
-                          {workout.distance}km • {workout.duration}min
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {workout.pace} min/km • {workout.calories} cal
-                        </div>
+                        {workout.type === "running" && (
+                          <>
+                            <div className="font-medium text-sm">
+                              Running: {workout.distance}km • {workout.duration}min
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {workout.pace} min/km • {workout.calories} cal
+                            </div>
+                          </>
+                        )}
+                        {workout.type === "pullups" && (
+                          <>
+                            <div className="font-medium text-sm">
+                              Pull Ups: {workout.reps} reps
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {workout.calories} cal
+                            </div>
+                          </>
+                        )}
+                        {workout.type === "pushups" && (
+                          <>
+                            <div className="font-medium text-sm">
+                              Push Ups: {workout.reps} reps
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {workout.calories} cal
+                            </div>
+                          </>
+                        )}
+                        {workout.type === "legraises" && (
+                          <>
+                            <div className="font-medium text-sm">
+                              Leg Raises: {workout.reps} reps
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {workout.calories} cal
+                            </div>
+                          </>
+                        )}
                       </div>
                       <button
                         onClick={() => deleteWorkout(workout.id)}
@@ -774,6 +963,67 @@ const CalorieTracker = () => {
                   <span className="text-gray-500">Workout Calories</span>
                   <span className="font-bold">{totalWorkoutCalories}</span>
                 </div>
+              </div>
+            </div>
+
+            {/* Recommendation Card */}
+            <div className="glass-elevated rounded-2xl p-3">
+              <div className="text-xs font-semibold mb-2 text-gray-300">Personalized Recommendations</div>
+              <div className="text-xs text-gray-400 space-y-2">
+                {(() => {
+                  const profile = bodyCompositionProfiles[activityLevel as keyof typeof bodyCompositionProfiles];
+                  const isInDeficit = (totalMealCalories - totalWorkoutCalories) < tdee;
+                  const proteinPerKg = totalMealProtein / weight;
+
+                  // Pull ups recommendation (based on body composition and strength)
+                  let pullUpTarget = 5;
+                  if (activityLevel === "fit") pullUpTarget = 8;
+                  if (activityLevel === "slim") pullUpTarget = 10;
+                  if (activityLevel === "fat") pullUpTarget = 3;
+
+                  // Push ups recommendation
+                  let pushUpTarget = 15;
+                  if (activityLevel === "fit") pushUpTarget = 20;
+                  if (activityLevel === "slim") pushUpTarget = 25;
+                  if (activityLevel === "fat") pushUpTarget = 10;
+
+                  // Leg raises recommendation
+                  let legRaiseTarget = 10;
+                  if (activityLevel === "fit") legRaiseTarget = 15;
+                  if (activityLevel === "slim") legRaiseTarget = 20;
+                  if (activityLevel === "fat") legRaiseTarget = 8;
+
+                  return (
+                    <>
+                      <div className="glass rounded-lg p-2">
+                        <div className="text-[10px] text-gray-500 mb-1">Based on your profile ({activityLevel}, {weight}kg, {isInDeficit ? 'cutting' : 'maintenance'}):</div>
+                        <div className="space-y-1">
+                          <div className="flex justify-between">
+                            <span>Pull ups:</span>
+                            <span className="text-white font-medium">{pullUpTarget} reps × 3 sets</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Push ups:</span>
+                            <span className="text-white font-medium">{pushUpTarget} reps × 3 sets</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Leg raises:</span>
+                            <span className="text-white font-medium">{legRaiseTarget} reps × 3 sets</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Running:</span>
+                            <span className="text-white font-medium">5km, 2-3x/week</span>
+                          </div>
+                        </div>
+                      </div>
+                      {proteinPerKg < 1.6 && isInDeficit && (
+                        <div className="text-[10px] text-yellow-400 mt-2">
+                          ⚠️ Increase protein to {(weight * 1.6).toFixed(0)}g+ to preserve muscle during workouts
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </div>
           </div>
