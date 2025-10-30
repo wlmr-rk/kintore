@@ -40,10 +40,30 @@ const CalorieTracker = () => {
   const [dragStartY, setDragStartY] = useState(0);
   const [dragStartWeight, setDragStartWeight] = useState(0);
   const [insightsTab, setInsightsTab] = useState("balance");
+  const [weightHistory, setWeightHistory] = useState(() => {
+    const saved = localStorage.getItem("weightHistory");
+    return saved ? JSON.parse(saved) : [];
+  });
 
   // Save to localStorage whenever data changes
   React.useEffect(() => {
     localStorage.setItem("weight", weight.toString());
+
+    // Update weight history (weekly tracking)
+    const today = new Date().toISOString().split('T')[0];
+    const lastEntry = weightHistory[weightHistory.length - 1];
+
+    // Only add if it's a new week or first entry
+    if (!lastEntry || new Date(today).getTime() - new Date(lastEntry.date).getTime() >= 7 * 24 * 60 * 60 * 1000) {
+      const newEntry = {
+        date: today,
+        weight: weight,
+        change: lastEntry ? weight - lastEntry.weight : 0
+      };
+      const updatedHistory = [...weightHistory, newEntry];
+      setWeightHistory(updatedHistory);
+      localStorage.setItem("weightHistory", JSON.stringify(updatedHistory));
+    }
   }, [weight]);
 
   React.useEffect(() => {
@@ -761,7 +781,7 @@ const CalorieTracker = () => {
 
         {activeTab === "insights" && (
           <div className="space-y-2 view-transition">
-            <div className="glass-elevated rounded-2xl p-3">
+            <div className="glass-elevated rounded-2xl p-3 h-[220px] flex flex-col">
               {/* Tabs */}
               <div className="flex gap-1 mb-3">
                 {[
@@ -782,7 +802,7 @@ const CalorieTracker = () => {
               </div>
 
               {/* Tab Content */}
-              <div className="space-y-1 text-xs">
+              <div className="space-y-1 text-xs flex-1">
                 {insightsTab === "balance" && (
                   <>
                     <div className="flex justify-between">
@@ -880,6 +900,53 @@ const CalorieTracker = () => {
                     </div>
                   </>
                 )}
+              </div>
+            </div>
+
+            {/* Weight Projection Table */}
+            <div className="glass-elevated rounded-2xl p-3">
+              <div className="text-xs font-semibold mb-2 text-gray-300">90-Day Projection</div>
+              <div className="space-y-1">
+                {/* Header */}
+                <div className="flex justify-between text-[10px] text-gray-500 pb-1 border-b border-white/10">
+                  <span className="flex-1">Week</span>
+                  <span className="flex-1 text-right">Weight</span>
+                  <span className="flex-1 text-right">Change</span>
+                </div>
+                {/* Rows - show projection data */}
+                {(() => {
+                  const chartData = getChartData();
+                  const goalReachedIndex = chartData.findIndex((p: any) => p.weight <= goalWeight);
+
+                  return chartData.map((point: any, index: number) => {
+                    const weekChange = index === 0 ? 0 : point.weight - chartData[index - 1].weight;
+                    const isGoalReached = index === goalReachedIndex && goalReachedIndex !== -1;
+                    const projectedDate = new Date();
+                    projectedDate.setDate(projectedDate.getDate() + point.day);
+
+                    return (
+                      <div
+                        key={index}
+                        className={`flex items-center text-xs py-1 px-2 rounded-lg relative ${isGoalReached ? 'bg-green-500/20 border border-green-500/30' : ''
+                          }`}
+                      >
+                        <span className="flex-1 text-gray-400">
+                          Week {Math.floor(point.day / 7)}
+                        </span>
+                        {isGoalReached && (
+                          <span className="absolute left-[33%] -translate-x-1/2 text-[9px] text-green-400 whitespace-nowrap">
+                            {projectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </span>
+                        )}
+                        <span className="flex-1 text-right font-semibold">{point.weight.toFixed(1)} kg</span>
+                        <span className={`flex-1 text-right font-semibold ${weekChange < 0 ? 'text-green-400' : weekChange > 0 ? 'text-red-400' : 'text-gray-400'
+                          }`}>
+                          {index === 0 ? '—' : (weekChange > 0 ? '+' : '') + weekChange.toFixed(1)}
+                        </span>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             </div>
           </div>
