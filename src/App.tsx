@@ -971,7 +971,6 @@ const CalorieTracker = () => {
               <div className="text-xs font-semibold mb-2 text-gray-300">Personalized Recommendations</div>
               <div className="text-xs text-gray-400 space-y-2">
                 {(() => {
-                  const profile = bodyCompositionProfiles[activityLevel as keyof typeof bodyCompositionProfiles];
                   const isInDeficit = (totalMealCalories - totalWorkoutCalories) < tdee;
                   const proteinPerKg = totalMealProtein / weight;
 
